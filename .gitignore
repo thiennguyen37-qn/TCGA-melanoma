@@ -1,0 +1,16 @@
+# Image data - too large for Git (~5.4GB), download separately (see README)
+images/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Personal working notes
+note.md
