@@ -1,5 +1,9 @@
 # Image data - too large for Git (~5.4GB), download separately (see README)
 images/
+images.zip
+
+# Claude Code local state
+.claude/
 
 # Jupyter
 .ipynb_checkpoints/
