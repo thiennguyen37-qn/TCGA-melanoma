@@ -20,6 +20,18 @@ ANATOM_CATEGORIES = [
     "oral/genital", "palms/soles", "posterior torso", "upper extremity",
 ]
 
+# Nhãn tiếng Việt hiển thị trên form - value gửi lên server vẫn là ANATOM_CATEGORIES (tiếng Anh)
+ANATOM_LABELS_VI = {
+    "anterior torso": "Thân trước",
+    "head/neck": "Đầu/cổ",
+    "lateral torso": "Thân bên",
+    "lower extremity": "Chi dưới",
+    "oral/genital": "Niêm mạc miệng/sinh dục",
+    "palms/soles": "Lòng bàn tay/lòng bàn chân",
+    "posterior torso": "Thân sau",
+    "upper extremity": "Chi trên",
+}
+
 IMAGE_SIZE = 224
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]

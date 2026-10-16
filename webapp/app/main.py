@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from PIL import Image, UnidentifiedImageError
 
 from app.model import LABEL_NAMES, load_model
-from app.preprocessing import ANATOM_CATEGORIES, preprocess_image, preprocess_metadata
+from app.preprocessing import ANATOM_CATEGORIES, ANATOM_LABELS_VI, preprocess_image, preprocess_metadata
 from app.schemas import PredictionResponse
 
 CHECKPOINT_PATH = os.environ.get("CHECKPOINT_PATH", "models/best_model_improved.pt")
@@ -49,8 +49,9 @@ def predict_with_tta(model, image_tensor, metadata_tensor, device):
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
+    anatom_options = [(cat, ANATOM_LABELS_VI[cat]) for cat in ANATOM_CATEGORIES]
     return templates.TemplateResponse(
-        request=request, name="index.html", context={"anatom_categories": ANATOM_CATEGORIES}
+        request=request, name="index.html", context={"anatom_options": anatom_options}
     )
 
 

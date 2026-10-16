@@ -43,8 +43,8 @@
             <div class="form-group">
                 <label for="anatom_site">Vị trí tổn thương</label>
                 <select id="anatom_site" name="anatom_site" required>
-                    {% for cat in anatom_categories %}
-                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% for cat, label_vi in anatom_options %}
+                    <option value="{{ cat }}">{{ label_vi }} ({{ cat }})</option>
                     {% endfor %}
                 </select>
             </div>
