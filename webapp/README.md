@@ -1,6 +1,6 @@
 # Melanoma Classifier — Web App
 
-Demo web app phục vụ model đã train trong `../07_train_improved.ipynb` (multimodal: EfficientNet-B0 + metadata, Focal Loss, TTA). Upload ảnh dermoscopy + nhập tuổi/giới tính/vị trí tổn thương, trả về dự đoán melanoma/nevus kèm độ tin cậy.
+Demo web app phục vụ model đã train trong `../notebooks/07_train_improved.ipynb` (multimodal: EfficientNet-B0 + metadata, Focal Loss, TTA). Upload ảnh dermoscopy + nhập tuổi/giới tính/vị trí tổn thương, trả về dự đoán melanoma/nevus kèm độ tin cậy.
 
 ⚠️ **Đây là demo học thuật, không phải công cụ chẩn đoán y tế.**
 
@@ -23,7 +23,7 @@ webapp/
 
 ## Lấy checkpoint model
 
-File `best_model_improved.pt` được train trên Colab (xem `../07_train_improved.ipynb`), lưu trên Google Drive — **không có trong Git** vì quá nặng.
+File `best_model_improved.pt` được train trên Colab (xem `../notebooks/07_train_improved.ipynb`), lưu trên Google Drive — **không có trong Git** vì quá nặng.
 
 1. Tải `best_model_improved.pt` từ Google Drive (`Melanoma/best_model_improved.pt`)
 2. Đặt vào `webapp/models/best_model_improved.pt`
