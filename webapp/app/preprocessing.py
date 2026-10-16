@@ -1,0 +1,58 @@
+"""Tiền xử lý input từ web (ảnh thô + form) thành đúng định dạng model cần.
+
+Hằng số AGE_MEAN/AGE_STD và thứ tự ANATOM_CATEGORIES được tính từ
+data/processed/train.csv (03_imputation.ipynb) để khớp chính xác với
+StandardScaler/OneHotEncoder đã dùng lúc train - không fit lại, vì val/test
+(và giờ là dữ liệu người dùng thật) phải dùng đúng thống kê từ train, tránh lệch
+phân phối so với lúc model học.
+"""
+import numpy as np
+import torch
+from PIL import Image
+from torchvision import transforms
+
+AGE_MEAN = 52.01913988657845
+AGE_STD = 17.761047728089167
+
+# Thứ tự alphabet - khớp với OneHotEncoder.categories_ đã dùng lúc train
+ANATOM_CATEGORIES = [
+    "anterior torso", "head/neck", "lateral torso", "lower extremity",
+    "oral/genital", "palms/soles", "posterior torso", "upper extremity",
+]
+
+IMAGE_SIZE = 224
+IMAGENET_MEAN = [0.485, 0.456, 0.406]
+IMAGENET_STD = [0.229, 0.224, 0.225]
+
+image_transform = transforms.Compose([
+    transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+])
+
+
+def preprocess_image(pil_image: Image.Image) -> torch.Tensor:
+    """PIL Image -> tensor (1, 3, 224, 224), sẵn sàng đưa vào model."""
+    rgb_image = pil_image.convert("RGB")
+    tensor = image_transform(rgb_image)
+    return tensor.unsqueeze(0)
+
+
+def preprocess_metadata(age: int, sex: str, anatom_site: str) -> torch.Tensor:
+    """age (5-85, số nguyên), sex ('male'/'female'), anatom_site (1 trong 8 category)
+    -> tensor (1, 13) đúng thứ tự METADATA_COLS."""
+    if anatom_site not in ANATOM_CATEGORIES:
+        raise ValueError(f"anatom_site phải là 1 trong {ANATOM_CATEGORIES}, nhận được: {anatom_site!r}")
+    if sex not in ("male", "female"):
+        raise ValueError(f"sex phải là 'male' hoặc 'female', nhận được: {sex!r}")
+
+    u50 = 1.0 if age > 50 else 0.0
+    u60 = 1.0 if age > 60 else 0.0
+    u70 = 1.0 if age > 70 else 0.0
+    sex_encoded = 1.0 if sex == "male" else 0.0
+    age_scaled = (age - AGE_MEAN) / AGE_STD
+
+    anatom_onehot = [1.0 if cat == anatom_site else 0.0 for cat in ANATOM_CATEGORIES]
+
+    values = [u50, u60, u70, sex_encoded, age_scaled] + anatom_onehot
+    return torch.tensor(values, dtype=torch.float32).unsqueeze(0)

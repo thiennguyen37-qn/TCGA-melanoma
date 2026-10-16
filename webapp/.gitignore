@@ -1,0 +1,6 @@
+# Model checkpoint - quá nặng để đưa vào Git, xem README để biết cách lấy
+models/*.pt
+
+__pycache__/
+*.pyc
+.pytest_cache/

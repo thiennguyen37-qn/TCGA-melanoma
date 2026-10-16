@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Melanoma Classifier Demo</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Melanoma &amp; Nevus Classifier</h1>
+            <p class="subtitle">Demo học thuật — phân loại ảnh dermoscopy bằng multimodal deep learning (EfficientNet-B0 + metadata)</p>
+        </header>
+
+        <div class="disclaimer">
+            <strong>⚠️ Lưu ý quan trọng:</strong> Đây là công cụ demo học thuật, <strong>KHÔNG phải công cụ chẩn đoán y tế</strong>.
+            Kết quả chỉ mang tính tham khảo — hãy đến gặp bác sĩ da liễu để được chẩn đoán chính xác.
+        </div>
+
+        <form id="predict-form">
+            <div class="form-group">
+                <label for="image">Ảnh dermoscopy</label>
+                <input type="file" id="image" name="image" accept="image/*" required>
+                <img id="preview" class="preview" alt="">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="age">Tuổi</label>
+                    <input type="number" id="age" name="age" min="0" max="120" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="sex">Giới tính</label>
+                    <select id="sex" name="sex" required>
+                        <option value="male">Nam</option>
+                        <option value="female">Nữ</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="anatom_site">Vị trí tổn thương</label>
+                <select id="anatom_site" name="anatom_site" required>
+                    {% for cat in anatom_categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" id="submit-btn">Phân tích</button>
+        </form>
+
+        <div id="result" class="result hidden"></div>
+        <div id="error" class="error hidden"></div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
