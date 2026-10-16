@@ -6,7 +6,7 @@ Repo: https://github.com/thiennguyen37-qn/TCGA-melanoma
 
 ## Nguồn dữ liệu
 
-Ảnh và metadata lấy từ [ISIC Archive](https://www.isic-archive.com/). Mỗi ảnh có thể thuộc 1 trong 3 giấy phép khác nhau (`CC-0`, `CC-BY`, `CC-BY-NC`) — xem cột `copyright_license` trong `data/raw/metadata.csv` và chi tiết từng giấy phép trong `docs/`. Khi sử dụng ảnh CC-BY/CC-BY-NC cần ghi công theo `docs/attribution.txt`.
+Ảnh và metadata lấy từ bộ dữ liệu [Melanoma and Nevus Dermoscopy Images with Confirmed Histopathological Diagnosis](https://api.isic-archive.com/doi/melanoma-and-nevus-dermoscopy-images-with-confirmed-histopathological-diagnosis/) trên ISIC Archive. Mỗi ảnh có thể thuộc 1 trong 3 giấy phép khác nhau (`CC-0`, `CC-BY`, `CC-BY-NC`) — xem cột `copyright_license` trong `data/raw/metadata.csv` và chi tiết từng giấy phép trong `docs/`. Khi sử dụng ảnh CC-BY/CC-BY-NC cần ghi công theo `docs/attribution.txt`.
 
 ## Kết quả
 
@@ -53,7 +53,7 @@ pip install -r requirements.txt
 
 Thư mục `images/` chứa 18,133 ảnh (~5.4GB) nên **không được đưa lên GitHub** (xem `.gitignore`). Để tái tạo:
 
-1. Tải ảnh từ [ISIC Archive](https://www.isic-archive.com/) theo danh sách `isic_id` trong `data/raw/metadata.csv`.
+1. Tải ảnh từ [bộ dữ liệu trên ISIC Archive](https://api.isic-archive.com/doi/melanoma-and-nevus-dermoscopy-images-with-confirmed-histopathological-diagnosis/) theo danh sách `isic_id` trong `data/raw/metadata.csv`.
 2. Đặt toàn bộ ảnh (`ISIC_XXXXXXX.jpg`) vào thư mục `images/` ở root của repo.
 
 ## Thứ tự chạy notebook
