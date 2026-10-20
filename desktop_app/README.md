@@ -53,6 +53,7 @@ Mở `http://127.0.0.1:8000`.
 ## Chạy test
 
 ```bash
+pip install pytest httpx2   # httpx2: TestClient của FastAPI/Starlette cần gói này
 pytest tests/ -v
 ```
 
