@@ -1,20 +1,20 @@
-name: Webapp CI
+name: App CI
 
 on:
   push:
     paths:
-      - "webapp/**"
-      - ".github/workflows/webapp-ci.yml"
+      - "desktop_app/**"
+      - ".github/workflows/app-ci.yml"
   pull_request:
     paths:
-      - "webapp/**"
+      - "desktop_app/**"
 
 jobs:
   test:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: webapp
+        working-directory: desktop_app
 
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
-          cache-dependency-path: webapp/requirements.txt
+          cache-dependency-path: desktop_app/requirements.txt
 
       - name: Install dependencies
         run: |
