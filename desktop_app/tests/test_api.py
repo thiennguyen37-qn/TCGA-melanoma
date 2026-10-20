@@ -74,10 +74,22 @@ def test_predict_invalid_image(client):
     assert response.status_code == 422
 
 
-def test_predict_missing_field(client):
+def test_predict_missing_optional_fields(client):
+    # age/sex/anatom_site không bắt buộc - thiếu hết vẫn phải trả về 200 (dùng fallback)
     response = client.post(
         "/predict",
         files={"image": ("test.jpg", _make_test_image_bytes(), "image/jpeg")},
-        data={"age": 45, "sex": "male"},  # thiếu anatom_site
+        data={},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["label"] in ("melanoma", "nevus")
+
+
+def test_predict_missing_image(client):
+    # image là field bắt buộc duy nhất
+    response = client.post(
+        "/predict",
+        data={"age": 45, "sex": "male", "anatom_site": "head/neck"},
     )
     assert response.status_code == 422

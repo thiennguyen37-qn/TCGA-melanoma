@@ -24,6 +24,13 @@ form.addEventListener("submit", async (event) => {
     submitBtn.textContent = "Đang phân tích...";
 
     const formData = new FormData(form);
+    // age/sex/anatom_site không bắt buộc - bỏ field rỗng khỏi request để backend
+    // dùng fallback (Form(None)) thay vì nhận chuỗi rỗng "".
+    for (const field of ["age", "sex", "anatom_site"]) {
+        if (formData.get(field) === "") {
+            formData.delete(field);
+        }
+    }
 
     try {
         const response = await fetch("/predict", {

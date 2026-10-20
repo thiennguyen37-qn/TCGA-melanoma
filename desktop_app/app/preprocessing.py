@@ -6,6 +6,8 @@ StandardScaler/OneHotEncoder đã dùng lúc train - không fit lại, vì val/t
 (và giờ là dữ liệu người dùng thật) phải dùng đúng thống kê từ train, tránh lệch
 phân phối so với lúc model học.
 """
+from typing import Optional
+
 import numpy as np
 import torch
 from PIL import Image
@@ -13,6 +15,10 @@ from torchvision import transforms
 
 AGE_MEAN = 52.01913988657845
 AGE_STD = 17.761047728089167
+
+# Tỷ lệ nam trong tập train (data/processed/train.csv) - dùng làm fallback cho
+# sex_encoded khi không có thông tin giới tính (vd: dataset external thiếu cột này).
+SEX_MALE_RATIO = 0.5172495274102079
 
 # Thứ tự alphabet - khớp với OneHotEncoder.categories_ đã dùng lúc train
 ANATOM_CATEGORIES = [
@@ -50,19 +56,31 @@ def preprocess_image(pil_image: Image.Image) -> torch.Tensor:
     return tensor.unsqueeze(0)
 
 
-def preprocess_metadata(age: int, sex: str, anatom_site: str) -> torch.Tensor:
-    """age (5-85, số nguyên), sex ('male'/'female'), anatom_site (1 trong 8 category)
-    -> tensor (1, 13) đúng thứ tự METADATA_COLS."""
-    if anatom_site not in ANATOM_CATEGORIES:
+def preprocess_metadata(
+    age: Optional[int], sex: Optional[str], anatom_site: Optional[str]
+) -> torch.Tensor:
+    """age (5-85, số nguyên hoặc None), sex ('male'/'female' hoặc None),
+    anatom_site (1 trong 8 category hoặc None) -> tensor (1, 13) đúng thứ tự
+    METADATA_COLS.
+
+    Fallback khi thiếu field (vd: dataset external không có cột tương ứng):
+    - age=None -> dùng AGE_MEAN của tập train (age_scaled = 0, trung tâm phân phối)
+    - sex=None -> dùng SEX_MALE_RATIO của tập train (thay vì ép cứng 0/1)
+    - anatom_site=None -> one-hot toàn 0 (giống hành vi OneHotEncoder(handle_unknown='ignore')
+      lúc train khi gặp category chưa biết)
+    """
+    if anatom_site is not None and anatom_site not in ANATOM_CATEGORIES:
         raise ValueError(f"anatom_site phải là 1 trong {ANATOM_CATEGORIES}, nhận được: {anatom_site!r}")
-    if sex not in ("male", "female"):
+    if sex is not None and sex not in ("male", "female"):
         raise ValueError(f"sex phải là 'male' hoặc 'female', nhận được: {sex!r}")
 
-    u50 = 1.0 if age > 50 else 0.0
-    u60 = 1.0 if age > 60 else 0.0
-    u70 = 1.0 if age > 70 else 0.0
-    sex_encoded = 1.0 if sex == "male" else 0.0
-    age_scaled = (age - AGE_MEAN) / AGE_STD
+    age_for_threshold = age if age is not None else AGE_MEAN
+    u50 = 1.0 if age_for_threshold > 50 else 0.0
+    u60 = 1.0 if age_for_threshold > 60 else 0.0
+    u70 = 1.0 if age_for_threshold > 70 else 0.0
+    age_scaled = (age - AGE_MEAN) / AGE_STD if age is not None else 0.0
+
+    sex_encoded = SEX_MALE_RATIO if sex is None else (1.0 if sex == "male" else 0.0)
 
     anatom_onehot = [1.0 if cat == anatom_site else 0.0 for cat in ANATOM_CATEGORIES]
 

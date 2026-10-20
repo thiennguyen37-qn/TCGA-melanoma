@@ -3,7 +3,7 @@ import io
 import pytest
 from PIL import Image
 
-from app.preprocessing import ANATOM_CATEGORIES, preprocess_image, preprocess_metadata
+from app.preprocessing import AGE_MEAN, ANATOM_CATEGORIES, SEX_MALE_RATIO, preprocess_image, preprocess_metadata
 
 
 def test_preprocess_image_shape():
@@ -53,3 +53,24 @@ def test_preprocess_metadata_invalid_anatom_site():
 def test_preprocess_metadata_invalid_sex():
     with pytest.raises(ValueError):
         preprocess_metadata(age=40, sex="other", anatom_site=ANATOM_CATEGORIES[0])
+
+
+def test_preprocess_metadata_all_none_fallback():
+    # Không có field nào (vd: dataset external thiếu metadata) - vẫn phải ra tensor hợp lệ
+    tensor = preprocess_metadata(age=None, sex=None, anatom_site=None)
+    assert tensor.shape == (1, 13)
+    onehot_part = tensor[0, 5:]
+    assert onehot_part.sum().item() == 0.0  # không có site nào được chọn
+
+
+def test_preprocess_metadata_age_none_uses_train_mean():
+    tensor = preprocess_metadata(age=None, sex="male", anatom_site=ANATOM_CATEGORIES[0])
+    age_scaled = tensor[0, 4].item()
+    assert age_scaled == pytest.approx(0.0, abs=1e-6)  # (AGE_MEAN - AGE_MEAN) / AGE_STD = 0
+    u50 = tensor[0, 0].item()
+    assert u50 == (1.0 if AGE_MEAN > 50 else 0.0)
+
+
+def test_preprocess_metadata_sex_none_uses_train_ratio():
+    tensor = preprocess_metadata(age=40, sex=None, anatom_site=ANATOM_CATEGORIES[0])
+    assert tensor[0, 3].item() == pytest.approx(SEX_MALE_RATIO)

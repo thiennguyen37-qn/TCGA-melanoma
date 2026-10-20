@@ -1,6 +1,7 @@
 import io
 import os
 from contextlib import asynccontextmanager
+from typing import Optional
 
 import torch
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -63,11 +64,11 @@ async def health():
 @app.post("/predict", response_model=PredictionResponse)
 async def predict(
     image: UploadFile = File(...),
-    age: int = Form(...),
-    sex: str = Form(...),
-    anatom_site: str = Form(...),
+    age: Optional[int] = Form(None),
+    sex: Optional[str] = Form(None),
+    anatom_site: Optional[str] = Form(None),
 ):
-    if not (0 <= age <= 120):
+    if age is not None and not (0 <= age <= 120):
         raise HTTPException(status_code=422, detail="age phải trong khoảng 0-120")
 
     image_bytes = await image.read()
