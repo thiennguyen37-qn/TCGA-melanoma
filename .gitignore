@@ -2,6 +2,12 @@
 images/
 images.zip
 
+# External test datasets (ISIC collections, downloaded for validation) - too large for Git
+test/
+
+# Model checkpoints (~47MB) - stored on Google Drive, download separately
+*.pt
+
 # Claude Code local state
 .claude/
 
