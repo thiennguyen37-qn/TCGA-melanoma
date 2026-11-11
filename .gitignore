@@ -38,6 +38,11 @@ related_works/
 data/resplit/cache/
 data/resplit/near_dup_pairs.csv
 
+# Training bundle (rebuildable with experiments/prepare_cache.py) and run outputs
+data/cache320/
+data/bundle320.zip
+runs/
+
 # Paper working notes
 my_paper/
 past_method.md
