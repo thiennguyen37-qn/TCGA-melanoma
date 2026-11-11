@@ -23,7 +23,7 @@ Upload `data/bundle320.zip` lên Google Drive, ví dụ `MyDrive/Melanoma/bundle
 
 ```python
 from google.colab import drive; drive.mount('/content/drive')
-!git clone https://github.com/thiennguyen37-qn/TCGA-melanoma.git /content/repo
+!git clone -b add-gradcam-and-b3-notebooks https://github.com/thiennguyen37-qn/TCGA-melanoma.git /content/repo
 !pip install -q albumentations==2.0.8
 !cp /content/drive/MyDrive/Melanoma/bundle320.zip /content/ && unzip -q /content/bundle320.zip -d /content/data
 RUNS = '/content/drive/MyDrive/Melanoma/runs'   # lưu trên Drive để không mất khi bị ngắt phiên
