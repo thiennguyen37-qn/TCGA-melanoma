@@ -21,10 +21,10 @@ from common import MEAN, ROOT, SIZE, STD, UNetResNet18, gt_mask_path
 
 def collect():
     items = []  # (dataset, isic_id, image_path)
-    for name in ("train", "val", "test"):
-        with open(os.path.join(ROOT, "data", "processed", f"{name}.csv"), newline="", encoding="utf-8") as f:
-            for r in csv.DictReader(f):
-                items.append((name, r["isic_id"], os.path.join(ROOT, "images", r["isic_id"] + ".jpg")))
+    # every internal image, whatever its split (the split lives in data/resplit/split.csv)
+    with open(os.path.join(ROOT, "data", "raw", "metadata.csv"), newline="", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            items.append(("internal", r["isic_id"], os.path.join(ROOT, "images", r["isic_id"] + ".jpg")))
     for name, d in (("bald", "bald"), ("pad", "pad-ufes-20")):
         with open(os.path.join(ROOT, "test", d, "metadata.csv"), newline="", encoding="utf-8") as f:
             for r in csv.DictReader(f):

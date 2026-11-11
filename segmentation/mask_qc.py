@@ -4,7 +4,7 @@ Two sets:
   unet_val    the 12% hold-out of train_unet.py (same seed, same shuffle), which has ground truth,
               so each row also gets the Dice against the ground-truth mask. Used to calibrate the rule.
   pred        every image in data/masks_unet/index.csv with source=pred in the chosen datasets
-              (default train,val). Used to apply the rule.
+              (default internal). Used to apply the rule.
 
 Features per image (all from the U-Net probability map, no label needed):
   area_frac       mask area / image area
@@ -16,7 +16,11 @@ Features per image (all from the U-Net probability map, no label needed):
 
 Usage:
   python segmentation/mask_qc.py --set unet_val --out <csv>
-  python segmentation/mask_qc.py --set pred --datasets train,val --out <csv>
+  python segmentation/mask_qc.py --set pred --datasets internal,bald --out <csv>
+  python segmentation/mask_qc.py --set flags --features <csv> [<csv> ...]   # write qc_flag into index.csv
+
+Rule: qc_flag = 1 when tta_dice < 0.90 or uncertain_frac > 0.5. Flagged training images keep the
+classification loss but get lambda = 0 for the attention loss.
 """
 import argparse
 import csv
@@ -25,6 +29,7 @@ import random
 import time
 
 import numpy as np
+import pandas as pd
 import torch
 from PIL import Image
 from scipy import ndimage
@@ -47,7 +52,7 @@ def pred_items(datasets):
         rows = [r for r in csv.DictReader(f) if r["source"] == "pred" and r["dataset"] in datasets]
     out = []
     for r in rows:
-        if r["dataset"] in ("train", "val", "test"):
+        if r["dataset"] == "internal":
             ip = os.path.join(ROOT, "images", r["isic_id"] + ".jpg")
         else:
             d = "bald" if r["dataset"] == "bald" else "pad-ufes-20"
@@ -78,14 +83,35 @@ def features(p, p_h, p_v):
     }
 
 
+TTA_MIN, UNC_MAX = 0.90, 0.5  # calibrated on the U-Net hold-out: flags ~10%, catches 11/15 masks with Dice < 0.7
+
+
+def write_flags(feature_csvs):
+    """Merge QC features into data/masks_unet/index.csv and add qc_flag (1 = do not trust; use lambda = 0).
+    Ground-truth masks are never flagged. Pred masks without features keep qc_flag empty."""
+    path = os.path.join(ROOT, "data", "masks_unet", "index.csv")
+    idx = pd.read_csv(path).drop(columns=["tta_dice", "uncertain_frac", "qc_flag"], errors="ignore")
+    feats = pd.concat([pd.read_csv(p, usecols=["isic_id", "tta_dice", "uncertain_frac"]) for p in feature_csvs])
+    idx = idx.merge(feats.drop_duplicates("isic_id"), on="isic_id", how="left")
+    flag = ((idx.tta_dice < TTA_MIN) | (idx.uncertain_frac > UNC_MAX)).astype("Int64")
+    flag[idx.tta_dice.isna()] = pd.NA
+    flag[idx.source == "gt"] = 0
+    idx["qc_flag"] = flag
+    idx.to_csv(path, index=False)
+    print(idx.groupby(["dataset", "source"]).qc_flag.agg(["count", "sum"]).to_string())
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--set", choices=["unet_val", "pred"], required=True)
-    ap.add_argument("--datasets", default="train,val")
+    ap.add_argument("--set", choices=["unet_val", "pred", "flags"], required=True)
+    ap.add_argument("--features", nargs="*", default=[], help="with --set flags: feature CSVs to merge")
+    ap.add_argument("--datasets", default="internal", help="comma list of index.csv datasets: internal, bald, pad")
     ap.add_argument("--ckpt", default=os.path.join(ROOT, "segmentation", "unet_resnet18.pt"))
-    ap.add_argument("--out", required=True)
+    ap.add_argument("--out")
     ap.add_argument("--bs", type=int, default=32)
     a = ap.parse_args()
+    if a.set == "flags":
+        return write_flags(a.features)
     torch.set_num_threads(os.cpu_count())
 
     model = UNetResNet18(pretrained=False)
