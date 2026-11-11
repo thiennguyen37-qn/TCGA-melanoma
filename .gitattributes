@@ -1,2 +1,4 @@
 # Locked evaluation lists are hashed in experiments/PROTOCOL.md; keep LF so the hash matches on every OS
 experiments/*.csv text eol=lf
+# split.csv was hashed with CRLF line endings; store it byte for byte
+data/resplit/split.csv -text
