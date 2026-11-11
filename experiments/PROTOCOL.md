@@ -1,6 +1,6 @@
 # Protocol đánh giá
 
-**Trạng thái:** bản nháp. Protocol được khoá khi commit kèm tag git `protocol-v1`, trước lần đánh giá external đầu tiên. Sau khi khoá, mọi thay đổi phải ghi vào mục 9 (Sai lệch so với protocol) kèm ngày và lý do.
+**Trạng thái:** đã khoá ngày 2026-11-11 bằng tag git `protocol-v1` (commit `5d55c14`), trước mọi lần đánh giá external. Mọi thay đổi về sau phải ghi vào mục 9 (Sai lệch so với protocol) kèm ngày và lý do.
 
 ## 1. Dữ liệu
 
