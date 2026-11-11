@@ -24,3 +24,15 @@ Thumbs.db
 
 # Personal working notes
 note.md
+
+# Downloaded ISIC 2018 Task 1 segmentation masks
+data/masks_isic2018_task1/
+
+# Generated lesion masks (U-Net + ground truth)
+data/masks_unet/
+
+# Downloaded related-work PDFs
+related_works/
+
+# Paper working notes
+my_paper/
