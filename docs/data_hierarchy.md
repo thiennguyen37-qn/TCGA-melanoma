@@ -45,4 +45,9 @@ patient_id (1 bệnh nhân)
 
 Vì nhiều ảnh có thể thuộc cùng 1 lesion (và cùng 1 bệnh nhân), **không được split train/val/test ngẫu nhiên theo từng ảnh**. Nếu làm vậy, model có thể học "nhận mặt" một lesion cụ thể từ các ảnh của nó trong tập train, rồi dễ dàng đoán đúng ảnh khác của cùng lesion đó ở tập test — gây **data leakage**, khiến độ chính xác đánh giá bị thổi phồng giả tạo, không phản ánh đúng khả năng tổng quát hóa của model.
 
-**Giải pháp**: group-split theo `lesion_id` (ưu tiên), fallback `patient_id`, fallback `isic_id` nếu thiếu cả hai — đảm bảo toàn bộ ảnh của cùng 1 group luôn nằm trọn trong 1 tập (train, val, hoặc test), không bao giờ bị chia đôi. Xem chi tiết cách triển khai trong `explore_metadata.ipynb`.
+Rò rỉ còn đến từ hai nguồn khác ngoài lesion:
+
+- **Cùng bệnh nhân:** ảnh các lesion khác nhau của một người thường giống nhau về màu da, máy chụp, ánh sáng. Chỉ 27,6% ảnh có `patient_id`, nhưng một lesion có `patient_id` ở một ảnh thì các ảnh khác của lesion đó cũng thuộc bệnh nhân này.
+- **Ảnh đăng lại:** cùng một ảnh có thể xuất hiện ở hai collection mà không chung id nào.
+
+**Giải pháp** (`splitting/resplit.py`): hai ảnh được nối nếu **chung `lesion_id`, hoặc chung `patient_id`, hoặc là ảnh gần trùng**. Ảnh gần trùng được dò bằng perceptual hash để lọc ứng viên, rồi xác nhận bằng tương quan pixel ở vùng giữa ảnh, chuẩn hoá từng kênh màu. Mỗi thành phần liên thông là một nhóm, toàn bộ ảnh của một nhóm nằm trọn trong một tập. Các nhóm được chia train/val/test 70/15/15 và phân tầng theo nhãn. Ảnh trùng nhau nhưng mang nhãn khác nhau là lỗi nhãn ở nguồn và bị loại (14 ảnh, 6 cụm).

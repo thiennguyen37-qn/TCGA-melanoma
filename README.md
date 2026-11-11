@@ -8,31 +8,31 @@ Repo: https://github.com/thiennguyen37-qn/TCGA-melanoma
 
 Ảnh và metadata lấy từ bộ dữ liệu [Melanoma and Nevus Dermoscopy Images with Confirmed Histopathological Diagnosis](https://api.isic-archive.com/doi/melanoma-and-nevus-dermoscopy-images-with-confirmed-histopathological-diagnosis/) trên ISIC Archive. Mỗi ảnh có thể thuộc 1 trong 3 giấy phép khác nhau (`CC-0`, `CC-BY`, `CC-BY-NC`) — xem cột `copyright_license` trong `data/raw/metadata.csv` và chi tiết từng giấy phép trong `docs/`. Khi sử dụng ảnh CC-BY/CC-BY-NC cần ghi công theo `docs/attribution.txt`.
 
-## Kết quả
+## Trạng thái
 
-Model tốt nhất: `notebooks/07_train_improved.ipynb` (multimodal — ảnh + metadata, backbone EfficientNet-B0, Focal Loss, Test-Time Augmentation), đánh giá trên test set:
-
-| Metric | 05 Baseline (image-only) | 06 Multimodal | **07 Improved** |
-|---|---|---|---|
-| AUC | 0.8692 | 0.8784 | **0.9011** |
-| Accuracy | 0.7933 | 0.8071 | **0.8313** |
-| Sensitivity | 0.7886 | 0.7905 | **0.8180** |
-
+- Dữ liệu được chia train/val/test theo cụm lesion, bệnh nhân và ảnh gần trùng (`splitting/resplit.py`): 12.684 / 2.718 / 2.717 ảnh, melanoma 39,7% ở mỗi tập.
+- Model đang được train lại trên cách chia này, chưa có kết quả. Công thức baseline là notebook 07 (ảnh + metadata, EfficientNet-B0, Focal Loss, Test-Time Augmentation).
 ## Cấu trúc project
 
 ```
 .
 ├── notebooks/
-│   ├── 01_metadata_preprocessing.ipynb   # load raw metadata, loại cột, group-split train/val/test
+│   ├── 01_metadata_preprocessing.ipynb   # load raw metadata, loại cột
 │   ├── 02_EDA.ipynb                      # phân tích khám phá, kiểm định MCAR/MAR
 │   ├── 03_imputation.ipynb               # impute missing values, feature engineering, encoding, scaling
 │   ├── 04_image_pipeline.ipynb           # Dataset/DataLoader PyTorch, chạy được local/Colab/Kaggle
 │   ├── 05_train_baseline.ipynb           # baseline image-only (ResNet18)
 │   ├── 06_train_multimodal.ipynb         # ảnh + metadata (ResNet18 + MLP, late fusion)
-│   └── 07_train_improved.ipynb           # EfficientNet-B0 + Focal Loss + TTA, có resume-từ-checkpoint
+│   ├── 07_train_improved.ipynb           # EfficientNet-B0 + Focal Loss + TTA, có resume-từ-checkpoint
+│   ├── 08_external_validation.ipynb      # đánh giá ngoài trên PAD-UFES-20 và BALD
+│   ├── 09_gradcam.ipynb                  # Grad-CAM trên tập external
+│   └── 10_train_b3_color.ipynb           # EfficientNet-B3 + chuẩn hoá màu Shades of Gray
+├── splitting/resplit.py              # chia train/val/test theo cụm lesion, patient, ảnh gần trùng
+├── segmentation/                     # U-Net sinh mask tổn thương và kiểm tra chất lượng mask
 ├── data/
 │   ├── raw/metadata.csv              # metadata gốc (18,133 ảnh)
-│   ├── splitted/                     # train/val/test sau group-split (01)
+│   ├── resplit/                      # kết quả chia lại: split.csv, perceptual hash, ảnh trùng khác nhãn, trùng với external
+│   ├── splitted/                     # train/val/test do splitting/resplit.py export ghi ra
 │   └── processed/                    # train/val/test đã impute + feature engineer (03)
 ├── docs/
 │   ├── attribution.txt               # nguồn đóng góp ảnh
@@ -59,7 +59,8 @@ Thư mục `images/` chứa 18,133 ảnh (~5.4GB) nên **không được đưa l
 
 ## Thứ tự chạy notebook
 
-1. **`notebooks/01_metadata_preprocessing.ipynb`** — load `data/raw/metadata.csv`, loại các cột không cần thiết (hằng số, hành chính, rò rỉ nhãn, quá thưa), group-split train/val/test theo `lesion_id`/`patient_id` (tránh data leakage), lưu kết quả vào `data/splitted/`.
+1. **`notebooks/01_metadata_preprocessing.ipynb`** — load `data/raw/metadata.csv`, loại các cột không cần thiết (hằng số, hành chính, rò rỉ nhãn, quá thưa).
+   - **Chia dữ liệu: `splitting/resplit.py`** — chạy lần lượt `hash`, `thumbs`, `pairs`, `split --keep-indeterminate`, `export`. Ảnh được nhóm theo chung `lesion_id`, chung `patient_id` hoặc ảnh gần trùng, chia 70/15/15 theo nhóm và phân tầng theo nhãn, ghi vào `data/splitted/`. Chi tiết ở `docs/data_hierarchy.md`.
 2. **`notebooks/02_EDA.ipynb`** — khám phá dữ liệu (phân phối tuổi/giới/vị trí tổn thương theo nhãn), kiểm định cơ chế missing (MCAR vs. MAR) cho `age_approx`, `sex`, `anatom_site_general`.
 3. **`notebooks/03_imputation.ipynb`** — impute các cột còn thiếu bằng stratified random hot-deck (sample có hoàn lại từ dữ liệu thật, điều kiện theo `attribution_grouped`, fit trên train áp dụng xuống val/test tránh leakage); feature engineering (`U50`/`U60`/`U70`), encoding (binary/one-hot), scaling (`StandardScaler`); lưu vào `data/processed/`.
 4. **`notebooks/04_image_pipeline.ipynb`** — join ảnh với metadata, định nghĩa PyTorch `Dataset`/`DataLoader`, augmentation (chỉ train). Tự nhận diện môi trường chạy (local/Colab/Kaggle) và điều chỉnh đường dẫn phù hợp.
