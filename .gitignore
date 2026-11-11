@@ -34,5 +34,9 @@ data/masks_unet/
 # Downloaded related-work PDFs
 related_works/
 
+# Re-split intermediates (rebuildable with splitting/resplit.py)
+data/resplit/cache/
+data/resplit/near_dup_pairs.csv
+
 # Paper working notes
 my_paper/
