@@ -14,6 +14,25 @@ Code cho các thí nghiệm của paper, chạy đúng theo [PROTOCOL.md](PROTOC
 | `rq4_attention.py` | RQ4: tỉ lệ năng lượng Grad-CAM++ trong mask (334 ảnh test có mask chuẩn, ảnh BALD có qc_flag = 0) và sanity check ngẫu nhiên hoá trọng số theo tầng; chạy được trên CPU |
 | `mask_overlap.py` | Số liệu mô tả: độ trùng giữa mask thật và mask hoán vị của V2, so với một hình tròn giữa ảnh |
 
+## Trạng thái
+
+- λ = 3, chọn trên val theo mục 4 của protocol (cả 4 giá trị trong lưới đều qua ngưỡng).
+- Đã chạy xong 25 run chính (5 biến thể × seed 0–4) trên Colab T4, cùng commit `f5ac3d8`. Kết quả nằm trong `runs/` trên máy và trên Drive; `runs/` không có trong git.
+- Các sai lệch so với protocol được ghi ở mục 9 của [PROTOCOL.md](PROTOCOL.md).
+
+Kết quả chính (`stats.py`, `rq4_attention.py`; trung bình 5 seed, bootstrap theo cụm 2.000 lần):
+
+| | BALD | PAD-UFES-20 |
+|---|---|---|
+| V1 − V0 (endpoint chính, Holm) | +0,012, 97,5% CI [+0,001; +0,023], p Holm 0,028 | +0,006, 95% CI [−0,017; +0,030], p Holm 0,60 |
+| V1 − V2 (mask thật − mask ngẫu nhiên) | −0,007 [−0,016; +0,001] | −0,026 [−0,052; 0,000] |
+| V1 − V3, V4 − V3 | CI chứa 0 | CI chứa 0 |
+| AUC so với reader (0,973) | mọi biến thể thấp hơn 0,035–0,055 | – |
+
+- Tỉ lệ năng lượng Grad-CAM++ trong mask: V0 0,573 → V1 0,847 trên 334 ảnh test có mask chuẩn; 0,691 → 0,948 trên BALD.
+- Mức cải thiện của V1 trên BALD có ý nghĩa thống kê nhưng nhỏ hơn mức hiệu ứng đáng quan tâm định trước (+0,02). Mask ngẫu nhiên và augmentation đạt tương đương.
+- Mask hoán vị của V2 trùng tổn thương thật 62% (Dice 0,44), nên V2 đóng vai đối chứng "nhìn vào vùng trung tâm".
+
 ## Chuẩn bị (máy local, một lần)
 
 ```bash
