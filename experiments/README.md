@@ -37,7 +37,25 @@ Mỗi lần chạy:
 
 Bị ngắt phiên thì chạy lại đúng lệnh đó: script tự resume từ `last.pt`. Kết quả trên external chỉ được tính một lần cho mỗi lần chạy.
 
-Trên Kaggle: thay `--data` bằng thư mục dataset đã giải nén và `--runs` bằng `/kaggle/working/runs`.
+## Ô chạy toàn bộ các lần chạy chính trên Colab
+
+Chạy các seed lần lượt, mỗi seed đủ 5 biến thể. Run nào đã có `summary.json` thì bỏ qua, run đang dở thì resume, nên bị ngắt chỉ cần chạy lại ô setup rồi chạy lại ô này.
+
+```python
+import os
+LAM, SEEDS = 3, [0, 1, 2, 3, 4]
+plan = [(v, s) for s in SEEDS for v in ('V0', 'V1', 'V2', 'V3', 'V4')]
+for v, s in plan:
+    lam = LAM if v in ('V1', 'V2', 'V4') else 0
+    name = f"{v}_s{s}" + (f"_lam{lam:g}" if lam else "")
+    if os.path.exists(f"{RUNS}/{name}/summary.json"):
+        print("skip", name); continue
+    print("=== run", name)
+    lam_arg = f"--lam {lam}" if lam else ""
+    !python /content/repo/experiments/train.py --data /content/data --runs {RUNS} --variant {v} --seed {s} {lam_arg}
+```
+
+Colab chỉ chạy khi máy local bật và tab còn mở: tắt chế độ sleep của máy trong lúc chạy.
 
 ## Thứ tự chạy
 
