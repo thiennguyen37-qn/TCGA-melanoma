@@ -10,6 +10,7 @@ Code cho các thí nghiệm của paper, chạy đúng theo [PROTOCOL.md](PROTOC
 | `augment.py` | Augmentation mặc định (notebook 04) và policy `mix` của Kozachok 2026a |
 | `train.py` | Train và đánh giá một biến thể × seed |
 | `select_lambda.py` | Chọn λ theo quy tắc ở mục 4 của protocol |
+| `stats.py` | Bootstrap theo cụm có ghép cặp, Holm cho endpoint chính, so với reader trên BALD (mục 6–7) |
 
 ## Chuẩn bị (máy local, một lần)
 
@@ -72,6 +73,16 @@ Colab chỉ chạy khi máy local bật và tab còn mở: tắt chế độ sle
    - V0: seed 0–4
    - V1, V2, V4: `--lam <λ>`, seed 0–4
    - V3: seed 0–4
+
+## Thống kê (máy local)
+
+Tải thư mục `runs/` từ Drive về `D:\Melanoma\runs\`. Chỉ cần `preds_*.csv`, `summary.json` và `lambda_choice.json`, không cần các file `.pt`. Sau đó chạy:
+
+```bash
+python experiments/stats.py --runs runs
+```
+
+Kết quả in ra màn hình và ghi vào `runs/stats/comparisons.csv`, `runs/stats/per_variant.csv`. Script chạy được khi mới có một phần seed: mỗi phép so sánh dùng các seed mà cả hai biến thể đều đã có.
 
 ## Kiểm tra nhanh trên CPU
 
