@@ -87,4 +87,14 @@ Với mỗi model (biến thể × seed), ngưỡng là giá trị lớn nhất 
 
 ## 9. Sai lệch so với protocol
 
-Chưa có.
+Mọi mục dưới đây được phát hiện hoặc quyết định sau khi đã chạy xong 25 run và chấm external. Không mục nào làm thay đổi dữ liệu, code huấn luyện, λ, ngưỡng hay checkpoint.
+
+1. **ToGray trong policy `mix` (V3, V4), phát hiện 2026-11-12 khi đối chiếu lại Bảng A6 của Kozachok 2026a.**
+   - Bảng A6 đặt `ToGray` (trọng số 0,001) là một thành viên của khối OneOf photometric. `experiments/augment.py` lại áp `ToGray(p=0.001)` thành một bước riêng, sau khối đó.
+   - Hệ quả: xác suất một ảnh bị chuyển xám là 0,001 thay vì khoảng 0,0001 (0,7 × 0,001 / tổng trọng số ≈ 5,8 của khối). Trên khoảng 190.000 lượt ảnh mỗi run (12.684 ảnh × tối đa 15 epoch), đó là khoảng 190 ảnh xám thay vì khoảng 23.
+   - Quyết định: không chạy lại V3, V4. Tác động được đánh giá là không đáng kể, và việc này được nêu trong phần Methods.
+2. **Cụm bootstrap ở test nội bộ.** Mục 7 ghi "bệnh nhân". Vì khoảng 72% ảnh không có `patient_id`, `experiments/stats.py` dùng `group_id` của `data/resplit/split.csv`, tức là cụm liên thông theo lesion, bệnh nhân và ảnh gần trùng. Đây là cụm thô hơn, nên chặt hơn so với cụm bệnh nhân. Endpoint chính (BALD, PAD) không bị ảnh hưởng.
+3. **Phân tích bổ sung, ngoài protocol, báo cáo là thăm dò:**
+   - RQ4: ngoài Grad-CAM++, báo thêm tỉ lệ năng lượng trong mask của CAM thường, vì với head GAP + Linear, trọng số Grad-CAM++ gần như không phụ thuộc vào trọng số của head.
+   - Độ trùng giữa mask thật và mask hoán vị của V2 (`experiments/mask_overlap.py`), là số liệu mô tả, không dùng đầu ra của model.
+   - Mức lộ nhãn do thiếu dữ liệu `sex` trên PAD-UFES-20 (AUC của chỉ báo "có giá trị sex" = 0,846), dùng để giải thích lựa chọn chỉ dùng ảnh ở mục 2.
