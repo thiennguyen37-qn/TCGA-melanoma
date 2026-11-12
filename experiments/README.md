@@ -11,6 +11,8 @@ Code cho các thí nghiệm của paper, chạy đúng theo [PROTOCOL.md](PROTOC
 | `train.py` | Train và đánh giá một biến thể × seed |
 | `select_lambda.py` | Chọn λ theo quy tắc ở mục 4 của protocol |
 | `stats.py` | Bootstrap theo cụm có ghép cặp, Holm cho endpoint chính, so với reader trên BALD (mục 6–7) |
+| `rq4_attention.py` | RQ4: tỉ lệ năng lượng Grad-CAM++ trong mask (334 ảnh test có mask chuẩn, ảnh BALD có qc_flag = 0) và sanity check ngẫu nhiên hoá trọng số theo tầng; chạy được trên CPU |
+| `mask_overlap.py` | Số liệu mô tả: độ trùng giữa mask thật và mask hoán vị của V2, so với một hình tròn giữa ảnh |
 
 ## Chuẩn bị (máy local, một lần)
 
@@ -83,6 +85,24 @@ python experiments/stats.py --runs runs
 ```
 
 Kết quả in ra màn hình và ghi vào `runs/stats/comparisons.csv`, `runs/stats/per_variant.csv`. Script chạy được khi mới có một phần seed: mỗi phép so sánh dùng các seed mà cả hai biến thể đều đã có.
+
+## RQ4 (máy local, CPU)
+
+Cần `best.pt` của 25 run chính trong `runs/<run>/`. Sau đó chạy:
+
+```bash
+python experiments/rq4_attention.py --data data/cache320 --runs runs
+```
+
+Kết quả nằm trong `runs/rq4/`. Mất khoảng 40 phút trên CPU; nếu bị ngắt, chạy lại sẽ bỏ qua các run đã tính.
+
+## Độ trùng mask của V2 (máy local)
+
+```bash
+python experiments/mask_overlap.py --data data/cache320
+```
+
+Dùng đúng hoán vị của `train.py` (`default_rng(seed)` trên các dòng train của `split.csv`), không dùng đầu ra của model. Kết quả ghi vào `runs/mask_overlap.csv`.
 
 ## Kiểm tra nhanh trên CPU
 
