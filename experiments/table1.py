@@ -77,7 +77,7 @@ def main():
     # morphology or monitored for at least 1 year. Per-image method is not released, so it is reported at set level.
     bald["ref_standard"] = bald.label.map({1: "melanoma: histopathology", 0: "nevus: histopathology or follow-up/morphology (per-image not released)"})
     flow.append(("BALD, images", len(bald_meta)))
-    flow.append(("BALD after removing 6 duplicates of training images: images / melanoma",
+    flow.append(("BALD after removing 6 copies of development images: images / melanoma",
                  f"{len(bald)} / {int(bald.label.sum())}"))
     rows.append(describe(bald, "BALD"))
 

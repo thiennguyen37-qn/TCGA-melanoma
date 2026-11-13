@@ -276,7 +276,7 @@ def efig_flow(root, out):
     box(77, 85, 22, 10, "PAD-UFES-20, smartphone", f"{n(c['pad_raw'])} images", fs=6.6)
     arrow(56, 85, 56, 50)
     branch(56, 75, 59)
-    box(59, 70.5, 15.5, 9, body=f"Excluded: {c['bald_raw'] - c['bald']}\nduplicates of\ntraining images", side=True)
+    box(59, 69.5, 15.5, 11, body=f"Excluded: {c['bald_raw'] - c['bald']}\ncopies of\ndevelopment\nimages", side=True)
     arrow(81, 85, 81, 50)
     branch(81, 75, 84)
     box(84, 70.5, 15.5, 9, body=f"Excluded: {n(sum(c['pad_other'].values()))}\nimages with other\ndiagnoses*", side=True)
