@@ -2,7 +2,7 @@
 PDF files to runs/figures/.
 
   fig1_forest           paired differences in external AUC (primary and exploratory comparisons)
-  fig2_attention        Grad-CAM++ energy inside the lesion mask vs image-independent references
+  fig2_attention        share of the attention map inside the lesion mask vs image-independent references
   fig3_reader           BALD AUC of each variant vs the reader votes, all lesions and melanoma in situ
   efig_calibration      reliability curves per evaluation set
   efig_sanity           cascading weight-randomisation sanity check
@@ -27,8 +27,8 @@ GRID, AXIS, SURFACE = "#e1e0d9", "#c3c2b7", "#ffffff"
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4"]
 MARKERS = ["o", "s", "^", "D", "v"]
 VARIANTS = ["V0", "V1", "V2", "V3", "V4"]
-NAMES = {"V0": "Baseline", "V1": "Lesion-mask supervision", "V2": "Permuted-mask control",
-         "V3": "Augmentation", "V4": "Augmentation + lesion mask"}
+NAMES = {"V0": "Standard training", "V1": "Mask supervision", "V2": "Mismatched-mask control",
+         "V3": "Augmentation", "V4": "Augmentation + mask supervision"}
 SETS = {"test": "Internal test", "bald": "BALD (acral)", "pad": "PAD-UFES-20 (smartphone)"}
 
 plt.rcParams.update({
@@ -80,12 +80,12 @@ def fig1(runs, out):
     ax.set_yticks([-i for i in range(len(rows))], labels, fontsize=7.5, color=INK2)
     ax.set_xlim(-0.065, 0.08)
     ax.set_ylim(-len(rows) + 0.4, 1.3)
-    ax.set_xlabel("Difference in AUC (mean of 5 seeds)")
+    ax.set_xlabel("Difference in AUC (mean of 5 training runs)")
     ax.text(0.085, 0.9, "Δ AUC (CI)", fontsize=8, color=INK, fontweight="bold")
     grid_x(ax)
     ax.set_title("Paired differences in AUC", loc="left")
-    fig.text(0.01, -0.04, "Filled markers: pre-registered primary comparisons, Holm-adjusted CI (97.5% for BALD, 95% for "
-             "PAD-UFES-20). Hollow markers: exploratory comparisons, 95% CI. Cluster bootstrap, 2,000 resamples.",
+    fig.text(0.01, -0.04, "Filled markers: primary comparisons, CI adjusted for 2 comparisons (Holm) (97.5% for BALD, 95% for "
+             "PAD-UFES-20). Hollow markers: secondary comparisons, 95% CI. Bootstrap, 2,000 resamples.",
              fontsize=7, color=MUTED, wrap=True)
     save(fig, out, "fig1_forest")
 
@@ -93,8 +93,8 @@ def fig1(runs, out):
 def fig2(runs, out):
     per = pd.read_csv(os.path.join(runs, "rq4", "energy_per_run.csv"))
     pri = pd.read_csv(os.path.join(runs, "rq4", "centre_prior_energy.csv"))
-    panels = [("test_gt", "Internal test, ground-truth masks (n = 334)"), ("bald_qc0", "BALD, U-Net masks passing QC (n = 613)")]
-    short = {"V0": "Baseline", "V1": "Lesion\nmask", "V2": "Permuted\nmask", "V3": "Augmen-\ntation", "V4": "Augmen-\ntation\n+ mask"}
+    panels = [("test_gt", "Internal test, ground-truth masks (n = 334)"), ("bald_qc0", "BALD, predicted masks passing quality check (n = 613)")]
+    short = {"V0": "Standard", "V1": "Mask\nsupervision", "V2": "Mismatched\nmask", "V3": "Augmen-\ntation", "V4": "Augmen-\ntation\n+ mask"}
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.6), sharey=True, gridspec_kw={"wspace": 0.12})
     for ax, (s, title) in zip(axes, panels):
         d = per[(per.set == s) & (per.variant.isin(VARIANTS))].groupby("variant").energy_mean.agg(["mean", "std"])
@@ -114,9 +114,9 @@ def fig2(runs, out):
         ax.set_ylim(0, 1.05)
         ax.set_title(title, loc="left", fontsize=8.5)
         grid_y(ax)
-    axes[0].set_ylabel("Share of Grad-CAM++ energy inside the mask")
+    axes[0].set_ylabel("Share of attention map inside the lesion mask")
     fig.suptitle("Where the models look", x=0.01, ha="left", fontsize=10, fontweight="bold", color=INK, y=1.03)
-    fig.text(0.01, -0.07, "Markers: mean over 5 seeds; bars: ±1 SD across seeds. Reference lines are image-independent maps: "
+    fig.text(0.01, -0.07, "Markers: mean over 5 training runs; bars: ±1 SD across runs. Reference lines are image-independent maps: "
              "a centred disc with the median training-mask area, and a uniform map (equal to the mask area).",
              fontsize=7, color=MUTED, wrap=True)
     save(fig, out, "fig2_attention")
@@ -143,7 +143,7 @@ def fig3(runs, out):
         ax.set_title(title, loc="left", fontsize=8.5)
         grid_x(ax)
     fig.suptitle("Models and readers on BALD", x=0.01, ha="left", fontsize=10, fontweight="bold", color=INK, y=1.04)
-    fig.text(0.01, -0.08, "Model AUC: mean over 5 seeds; CI from 2,000 bootstrap resamples of images shared by all models. "
+    fig.text(0.01, -0.08, "Model AUC: mean over 5 training runs; CI from 2,000 bootstrap resamples of images shared by all models. "
              "Exploratory subgroup analysis.", fontsize=7, color=MUTED, wrap=True)
     save(fig, out, "fig3_reader")
 
@@ -165,7 +165,7 @@ def efig_calibration(runs, out):
         grid_y(ax)
     axes[0].set_ylabel("Observed melanoma fraction")
     axes[1].legend(loc="upper center", bbox_to_anchor=(0.5, -0.28), ncol=3, fontsize=7.5)
-    fig.suptitle("Calibration (10 equal-width bins, mean over 5 seeds; bins with < 5 images omitted)", x=0.01,
+    fig.suptitle("Calibration (10 equal-width bins, mean over 5 training runs; bins with < 5 images omitted)", x=0.01,
                  ha="left", fontsize=9.5, fontweight="bold", color=INK, y=1.04)
     save(fig, out, "efig_calibration")
 
@@ -190,7 +190,7 @@ def efig_sanity(runs, out):
     ax.set_ylim(-0.4, 1.05)
     ax.set_xlabel("Weights re-initialised cumulatively from the head down to")
     ax.set_ylabel("Spearman ρ with original map")
-    ax.set_title("Cascading weight-randomisation sanity check (seed 0, 334 internal test images)", loc="left", fontsize=9.5)
+    ax.set_title("Cascading weight-randomisation sanity check (first training run, 334 internal test images)", loc="left", fontsize=9.5)
     grid_y(ax)
     save(fig, out, "efig_sanity")
 
