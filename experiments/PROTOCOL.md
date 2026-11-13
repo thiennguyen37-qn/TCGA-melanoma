@@ -98,3 +98,5 @@ Mọi mục dưới đây được phát hiện hoặc quyết định sau khi �
    - RQ4: ngoài Grad-CAM++, báo thêm tỉ lệ năng lượng trong mask của CAM thường, vì với head GAP + Linear, trọng số Grad-CAM++ gần như không phụ thuộc vào trọng số của head.
    - Độ trùng giữa mask thật và mask hoán vị của V2 (`experiments/mask_overlap.py`), là số liệu mô tả, không dùng đầu ra của model.
    - Mức lộ nhãn do thiếu dữ liệu `sex` trên PAD-UFES-20 (AUC của chỉ báo "có giá trị sex" = 0,846), dùng để giải thích lựa chọn chỉ dùng ảnh ở mục 2.
+   - RQ4: tỉ lệ năng lượng trong mask của các bản đồ cố định không phụ thuộc ảnh (hình tròn giữa ảnh có diện tích bằng diện tích mask trung vị của train, mask trung bình của train), làm mốc "chỉ nhìn vào giữa ảnh" (`experiments/centre_prior.py`, thêm ngày 2026-11-13).
+   - Phân tích theo nhóm trên BALD: vị trí acral (lòng bàn chân, lòng bàn tay) và mức xâm lấn của melanoma (in situ, xâm lấn), AUC và sensitivity/specificity tại ngưỡng val, so với reader (`experiments/subgroup_bald.py`, thêm ngày 2026-11-13). Không có kiểm định giữa các biến thể trong nhóm.
