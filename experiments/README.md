@@ -13,6 +13,8 @@ Code cho các thí nghiệm của paper, chạy đúng theo [PROTOCOL.md](PROTOC
 | `stats.py` | Bootstrap theo cụm có ghép cặp, Holm cho endpoint chính, so với reader trên BALD (mục 6–7) |
 | `rq4_attention.py` | RQ4: tỉ lệ năng lượng Grad-CAM++ trong mask (334 ảnh test có mask chuẩn, ảnh BALD có qc_flag = 0) và sanity check ngẫu nhiên hoá trọng số theo tầng; chạy được trên CPU |
 | `mask_overlap.py` | Số liệu mô tả: độ trùng giữa mask thật và mask hoán vị của V2, so với một hình tròn giữa ảnh |
+| `centre_prior.py` | RQ4, thăm dò: tỉ lệ năng lượng trong mask của bản đồ cố định "nhìn vào giữa ảnh", so với Grad-CAM++ của từng biến thể |
+| `subgroup_bald.py` | Thăm dò: AUC, sensitivity, specificity trên BALD theo vị trí acral và mức xâm lấn của melanoma, so với reader |
 
 ## Trạng thái
 
@@ -32,6 +34,8 @@ Kết quả chính (`stats.py`, `rq4_attention.py`; trung bình 5 seed, bootstra
 - Tỉ lệ năng lượng Grad-CAM++ trong mask: V0 0,573 → V1 0,847 trên 334 ảnh test có mask chuẩn; 0,691 → 0,948 trên BALD.
 - Mức cải thiện của V1 trên BALD có ý nghĩa thống kê nhưng nhỏ hơn mức hiệu ứng đáng quan tâm định trước (+0,02). Mask ngẫu nhiên và augmentation đạt tương đương.
 - Mask hoán vị của V2 trùng tổn thương thật 62% (Dice 0,44), nên V2 đóng vai đối chứng "nhìn vào vùng trung tâm".
+- Mốc "nhìn vào giữa ảnh" (hình tròn cố định, diện tích bằng mask trung vị) đạt 0,561 năng lượng trong mask ở test và 0,731 ở BALD, ngang V0 (0,573; 0,691). V1 và V2 vượt mốc này rõ (+0,29 và +0,24 ở test): có giám sát thì attention bám vào chính tổn thương, nhưng AUC ngoài vẫn gần như không đổi.
+- Trên BALD, melanoma in situ là nhóm khó nhất (AUC 0,87–0,89 so với reader 0,94); chênh lệch giữa các biến thể nhỏ ở mọi nhóm (kết quả thăm dò).
 
 ## Chuẩn bị (máy local, một lần)
 
@@ -122,6 +126,15 @@ python experiments/mask_overlap.py --data data/cache320
 ```
 
 Dùng đúng hoán vị của `train.py` (`default_rng(seed)` trên các dòng train của `split.csv`), không dùng đầu ra của model. Kết quả ghi vào `runs/mask_overlap.csv`.
+
+## Phân tích thăm dò (máy local)
+
+```bash
+python experiments/centre_prior.py --data data/cache320 --runs runs   # cần runs/rq4/energy_per_image.csv
+python experiments/subgroup_bald.py --runs runs
+```
+
+Kết quả ghi vào `runs/rq4/centre_prior_energy.csv`, `runs/rq4/centre_prior_comparisons.csv` và `runs/stats/subgroup_bald.csv`.
 
 ## Kiểm tra nhanh trên CPU
 
