@@ -15,6 +15,7 @@ Code cho các thí nghiệm của paper, chạy đúng theo [PROTOCOL.md](PROTOC
 | `mask_overlap.py` | Số liệu mô tả: độ trùng giữa mask thật và mask hoán vị của V2, so với một hình tròn giữa ảnh |
 | `centre_prior.py` | RQ4, thăm dò: tỉ lệ năng lượng trong mask của bản đồ cố định "nhìn vào giữa ảnh", so với Grad-CAM++ của từng biến thể |
 | `subgroup_bald.py` | Thăm dò: AUC, sensitivity, specificity trên BALD theo vị trí acral và mức xâm lấn của melanoma, so với reader |
+| `calibration.py` | Thăm dò: Brier, calibration intercept/slope, ECE và điểm reliability cho mọi run trên val, test, BALD, PAD-UFES-20 |
 
 ## Trạng thái
 
@@ -36,6 +37,7 @@ Kết quả chính (`stats.py`, `rq4_attention.py`; trung bình 5 seed, bootstra
 - Mask hoán vị của V2 trùng tổn thương thật 62% (Dice 0,44), nên V2 đóng vai đối chứng "nhìn vào vùng trung tâm".
 - Mốc "nhìn vào giữa ảnh" (hình tròn cố định, diện tích bằng mask trung vị) đạt 0,561 năng lượng trong mask ở test và 0,731 ở BALD, ngang V0 (0,573; 0,691). V1 và V2 vượt mốc này rõ (+0,29 và +0,24 ở test): có giám sát thì attention bám vào chính tổn thương, nhưng AUC ngoài vẫn gần như không đổi.
 - Trên BALD, melanoma in situ là nhóm khó nhất (AUC 0,87–0,89 so với reader 0,94); chênh lệch giữa các biến thể nhỏ ở mọi nhóm (kết quả thăm dò).
+- Calibration: mọi model dự đoán melanoma cao hơn thực tế, nhẹ ở test (intercept −0,32 đến −0,39) và nặng ở external (BALD −0,89 đến −1,08; PAD −0,96 đến −1,40), chủ yếu do tỉ lệ melanoma thấp hơn tập train. Slope > 1 ở mọi model (xác suất bị nén); giám sát attention và augmentation làm nén nhiều hơn (slope ở BALD: V0 1,51, V1 1,95, V3 2,49, V4 3,60).
 
 ## Chuẩn bị (máy local, một lần)
 
@@ -132,9 +134,10 @@ Dùng đúng hoán vị của `train.py` (`default_rng(seed)` trên các dòng t
 ```bash
 python experiments/centre_prior.py --data data/cache320 --runs runs   # cần runs/rq4/energy_per_image.csv
 python experiments/subgroup_bald.py --runs runs
+python experiments/calibration.py --runs runs
 ```
 
-Kết quả ghi vào `runs/rq4/centre_prior_energy.csv`, `runs/rq4/centre_prior_comparisons.csv` và `runs/stats/subgroup_bald.csv`.
+Kết quả ghi vào `runs/rq4/centre_prior_energy.csv`, `runs/rq4/centre_prior_comparisons.csv`, `runs/stats/subgroup_bald.csv` và `runs/stats/calibration_*.csv`.
 
 ## Kiểm tra nhanh trên CPU
 
