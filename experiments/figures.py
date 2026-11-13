@@ -6,6 +6,7 @@ PDF files to runs/figures/.
   fig3_reader           BALD AUC of each variant vs the reader votes, all lesions and melanoma in situ
   efig_calibration      reliability curves per evaluation set
   efig_sanity           cascading weight-randomisation sanity check
+  efig_flow             participant flow (counts computed from the split, mask index and external lists)
 
 Colours follow a validated categorical order (blue, orange, aqua, yellow, magenta); every series also has its own
 marker shape and a label, so identity never relies on colour alone.
@@ -195,12 +196,116 @@ def efig_sanity(runs, out):
     save(fig, out, "efig_sanity")
 
 
+def flow_counts(root):
+    """Every number in the flow diagram, computed from the split, the mask index and the external lists."""
+    sp = pd.read_csv(os.path.join(root, "data", "resplit", "split.csv"))
+    mi = pd.read_csv(os.path.join(root, "data", "cache320", "mask_index.csv")).merge(sp[["isic_id", "split"]], on="isic_id")
+    ext = pd.read_csv(os.path.join(root, "experiments", "external_ids.csv"))
+    bald = pd.read_csv(os.path.join(root, "test", "bald", "metadata.csv"), low_memory=False)
+    pad = pd.read_csv(os.path.join(root, "test", "pad-ufes-20", "metadata.csv"), low_memory=False)
+    bald_mask = pd.read_csv(os.path.join(root, "data", "cache320", "mask_index.csv"))
+    c = {"isic": len(sp), "dropped": int((sp.split == "dropped").sum())}
+    for s in ("train", "val", "test"):
+        d = sp[sp.split == s]
+        c[s], c[s + "_mel"] = len(d), int(d.label.sum())
+    tr = mi[mi.split == "train"]
+    c["train_gt"] = int((tr.source == "gt").sum())
+    c["train_pred"] = int((tr.source == "pred").sum())
+    c["train_flag"] = int((tr.qc_flag == 1).sum())
+    c["test_gt"] = int(((mi.split == "test") & (mi.source == "gt")).sum())
+    b = ext[ext.dataset == "bald"]
+    c["bald_raw"] = len(bald)
+    c["bald"], c["bald_mel"] = len(b), int(b.label.sum())
+    c["bald_qc"] = int(bald_mask[bald_mask.isic_id.isin(b.isic_id) & (bald_mask.qc_flag == 0)].shape[0])
+    p = ext[ext.dataset == "pad"]
+    c["pad_raw"] = len(pad)
+    c["pad_other"] = pad.diagnosis_3.value_counts().drop(["Nevus", "Melanoma, NOS"]).to_dict()
+    c["pad"], c["pad_mel"], c["pad_pat"] = len(p), int(p.label.sum()), p.cluster_id.nunique()
+    return c
+
+
+def efig_flow(root, out):
+    c = flow_counts(root)
+    n = lambda v: f"{v:,}".replace(",", " ")  # JAMA style: space as thousands separator
+    fig, ax = plt.subplots(figsize=(7.2, 5.9))
+    ax.set_xlim(0, 100)
+    ax.set_ylim(11, 100)
+    ax.axis("off")
+
+    def box(x, y, w, h, title=None, body="", side=False, fs=6.9):
+        ax.add_patch(matplotlib.patches.FancyBboxPatch(
+            (x, y), w, h, boxstyle="round,pad=0,rounding_size=1.0", linewidth=0.9,
+            edgecolor=AXIS, facecolor="#f4f3ef" if side else SURFACE))
+        if title:
+            ax.text(x + w / 2, y + h - 1.6, title, ha="center", va="top", fontsize=fs + 0.3, color=INK,
+                    fontweight="bold")
+            ax.text(x + w / 2, y + h - 4.6, body, ha="center", va="top", fontsize=fs, color=INK2, linespacing=1.35)
+        else:
+            ax.text(x + w / 2, y + h / 2, body, ha="center", va="center", fontsize=fs, color=INK2 if side else INK,
+                    linespacing=1.35)
+
+    def arrow(x0, y0, x1, y1):
+        ax.annotate("", xy=(x1, y1), xytext=(x0, y0),
+                    arrowprops=dict(arrowstyle="-|>", color=INK2, linewidth=0.9, shrinkA=0, shrinkB=0))
+
+    def branch(x0, y, x1):
+        ax.plot([x0, x1], [y, y], color=INK2, linewidth=0.9)
+
+    ax.text(0, 100, "Development data", fontsize=9, fontweight="bold", color=INK, va="top")
+    ax.text(52, 100, "External test data", fontsize=9, fontweight="bold", color=INK, va="top")
+
+    # development
+    box(2, 85, 42.5, 10, body=f"ISIC archive: melanoma and nevus with\nhistopathologic diagnosis\n{n(c['isic'])} images")
+    arrow(23.25, 85, 23.25, 66)
+    branch(23.25, 75.5, 27)
+    box(27, 71.5, 19.5, 8, body=f"Excluded: {c['dropped']} images in\nduplicate clusters with\nconflicting labels", side=True)
+    box(2, 57, 42.5, 9, body=f"{n(c['isic'] - c['dropped'])} images linked into clusters by lesion,\n"
+                           "patient, and near-duplicate image;\neach cluster assigned whole to 1 set")
+    xs = (0, 16, 32)
+    for x in xs:
+        arrow(x + 7.25, 57, x + 7.25, 50)
+    for (s, label), x in zip([("train", "Training"), ("val", "Validation"), ("test", "Internal test")], xs):
+        box(x, 39, 14.5, 11, label, f"{n(c[s])} images\n{n(c[s + '_mel'])} melanoma")
+    box(0, 14, 14.5, 22, "Lesion masks", f"{n(c['train_gt'])} ground truth\n{n(c['train_pred'])} predicted\n\n"
+                                           f"{n(c['train_flag'])} flagged by\nquality check and\nleft out of the\nattention penalty",
+        side=True, fs=6.6)
+    box(32, 22, 14.5, 14, "Attention", f"{n(c['test_gt'])} images with\nground-truth\nmasks", side=True, fs=6.6)
+
+    # external
+    box(52, 85, 22, 10, "BALD, acral dermoscopy", f"7 centers\n{n(c['bald_raw'])} images", fs=6.6)
+    box(77, 85, 22, 10, "PAD-UFES-20, smartphone", f"{n(c['pad_raw'])} images", fs=6.6)
+    arrow(56, 85, 56, 50)
+    branch(56, 75, 59)
+    box(59, 70.5, 15.5, 9, body=f"Excluded: {c['bald_raw'] - c['bald']}\nduplicates of\ntraining images", side=True)
+    arrow(81, 85, 81, 50)
+    branch(81, 75, 84)
+    box(84, 70.5, 15.5, 9, body=f"Excluded: {n(sum(c['pad_other'].values()))}\nimages with other\ndiagnoses*", side=True)
+    box(52, 39, 22, 11, "BALD test set", f"{n(c['bald'])} images\n{c['bald_mel']} melanoma")
+    box(77, 39, 22, 11, "PAD-UFES-20 test set", f"{n(c['pad'])} images, {c['pad_pat']} patients\n{c['pad_mel']} melanoma")
+    box(52, 14, 22, 22, "Analyses", f"AUC: all {n(c['bald'])} images\n\nReaders: all {n(c['bald'])} images\n(409 clinicians)\n\n"
+                                        f"Attention: {n(c['bald_qc'])} images\nwith predicted masks\npassing quality check",
+        side=True, fs=6.6)
+    box(77, 28, 22, 8, "Analyses", f"AUC: all {n(c['pad'])} images", side=True, fs=6.6)
+
+    for x0, y0, y1 in ((7.25, 39, 36), (39.25, 39, 36), (63, 39, 36), (88, 39, 36)):
+        ax.plot([x0, x0], [y0, y1], color=AXIS, linewidth=0.9)
+    names = {"Basal cell carcinoma": "basal cell carcinoma", "Solar or actinic keratosis": "actinic keratosis",
+             "Seborrheic keratosis": "seborrheic keratosis", "Squamous cell carcinoma, NOS": "squamous cell carcinoma"}
+    parts = [f"{n(v)} {names.get(k, k)}" for k, v in c["pad_other"].items()]
+    fig.text(0.02, 0.0, "*" + ", ".join(parts[:-1]) + f", and {parts[-1]}. Training and validation data were used for all "
+             "model choices; external test sets were used only for final evaluation.",
+             fontsize=6.8, color=MUTED, wrap=True)
+    save(fig, out, "efig_flow")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", default="runs")
+    ap.add_argument("--root", default=".")
     a = ap.parse_args()
     out = os.path.join(a.runs, "figures")
     os.makedirs(out, exist_ok=True)
+    efig_flow(a.root, out)
     fig1(a.runs, out)
     fig2(a.runs, out)
     fig3(a.runs, out)
