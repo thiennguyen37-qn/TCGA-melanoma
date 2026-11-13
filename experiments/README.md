@@ -16,6 +16,9 @@ Code cho các thí nghiệm của paper, chạy đúng theo [PROTOCOL.md](PROTOC
 | `centre_prior.py` | RQ4, thăm dò: tỉ lệ năng lượng trong mask của bản đồ cố định "nhìn vào giữa ảnh", so với Grad-CAM++ của từng biến thể |
 | `subgroup_bald.py` | Thăm dò: AUC, sensitivity, specificity trên BALD theo vị trí acral và mức xâm lấn của melanoma, so với reader |
 | `calibration.py` | Thăm dò: Brier, calibration intercept/slope, ECE và điểm reliability cho mọi run trên val, test, BALD, PAD-UFES-20 |
+| `table1.py` | Bảng 1 (đặc điểm dữ liệu từng tập) và số liệu sơ đồ luồng |
+| `figures.py` | Hình 1–3 và eFigure sơ đồ luồng, calibration, sanity check (PNG 300 dpi và PDF trong `runs/figures/`) |
+| `cam_examples.py` | eFigure ví dụ Grad-CAM++: 1 melanoma và 1 nevus chọn ngẫu nhiên (seed cố định) từ BALD và PAD-UFES-20; cần `best.pt` |
 
 ## Trạng thái
 
