@@ -1,8 +1,8 @@
-# TCGA Melanoma — Melanoma & Nevus Classification
+# Melanoma — Melanoma & Nevus Classification
 
 Bài toán phân loại nhị phân melanoma vs. nevus từ ảnh dermoscopy, dựa trên bộ dữ liệu ISIC (International Skin Imaging Collaboration) có xác nhận mô bệnh học.
 
-Repo: https://github.com/thiennguyen37-qn/TCGA-melanoma
+Repo: https://github.com/thiennguyen37-qn/Melanoma
 
 ## Nguồn dữ liệu
 
