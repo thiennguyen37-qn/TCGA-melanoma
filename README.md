@@ -4,6 +4,8 @@ Bài toán phân loại nhị phân melanoma vs. nevus từ ảnh dermoscopy, d�
 
 Repo: https://github.com/thiennguyen37-qn/Melanoma
 
+Bản lưu trữ (code tại thời điểm nộp bài, dự đoán từng ảnh, kết quả phân tích, trọng số 25 model): [doi:10.5281/zenodo.24217148](https://doi.org/10.5281/zenodo.24217148)
+
 ## Nguồn dữ liệu
 
 Ảnh và metadata lấy từ bộ dữ liệu [Melanoma and Nevus Dermoscopy Images with Confirmed Histopathological Diagnosis](https://api.isic-archive.com/doi/melanoma-and-nevus-dermoscopy-images-with-confirmed-histopathological-diagnosis/) trên ISIC Archive. Mỗi ảnh có thể thuộc 1 trong 3 giấy phép khác nhau (`CC-0`, `CC-BY`, `CC-BY-NC`) — xem cột `copyright_license` trong `data/raw/metadata.csv` và chi tiết từng giấy phép trong `docs/`. Khi sử dụng ảnh CC-BY/CC-BY-NC cần ghi công theo `docs/attribution.txt`.
